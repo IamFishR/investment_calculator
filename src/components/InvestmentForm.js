@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useReducer } from 'react';
 const InvestmentFormFields = {
     principal_amt: {
         label: "Principal Amount: Initial Investment",
@@ -67,67 +67,52 @@ const InvestmentFormFields = {
 }
 
 const InvestmentForm = (props) => {
-    const [error, setError] = useState('');
+
+    const reducer = (state, action) => {
+        return { ...state, ...action };
+    };
+    const [error, setError] = useReducer(reducer, {
+        principal_amt: '',
+        annual_growth_rate: '',
+        investment_period: '',
+        expected_return_rate: '',
+        tax_rate: '',
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const form = new FormData(e.target);
         const data = Object.fromEntries(form.entries());
-        setError('');
 
         let vCount = 0;
         Object.keys(InvestmentFormFields).map((key) => {
             const field = InvestmentFormFields[key];
             if (field.validation?.mandatory && !data[field.name]) {
                 vCount++;
-                // get the .form-control element
-                const formControl = document.querySelector(`#${field.id}`).parentElement;
-
-                if (formControl.querySelector('.error')) {
-                    return;
-                }
-                const errorElement = document.createElement('div');
-                errorElement.className = 'error';
-                errorElement.innerText = `${field.label} is required`;
-                formControl.appendChild(errorElement);
+                setError({
+                    [key]: field.label + ' is required',
+                });
             } else {
                 const value = parseFloat(data[field.name]);
 
                 if (field.validation?.min && value < field.validation.min) {
                     vCount++;
-                    // get the .form-control element
-                    const formControl = document.querySelector(`#${field.id}`).parentElement;
-
-                    if (formControl.querySelector('.error')) {
-                        formControl.querySelector('.error').innerText = `${field.label} should be greater than ${field.validation.min}`;
-                        return;
-                    }
-                    const errorElement = document.createElement('div');
-                    errorElement.className = 'error';
-                    errorElement.innerText = `${field.label} should be greater than ${field.validation.min}`;
-                    formControl.appendChild(errorElement);
+                    setError({
+                        [key]: field.label + ' should be greater than ' + field.validation.min
+                    });
                 } else {
-                    // remove error element
-                    const formControl = document.querySelector(`#${field.id}`).parentElement;
-                    if (formControl.querySelector('.error')) {
-                        formControl.querySelector('.error').remove();
-                    }
+                    setError({
+                        [key]: ''
+                    })
                 }
 
             }
         });
 
         if (vCount > 0) {
-            // setError('Please fill all the required fields');
             return;
         }
-
-        // remove all error elements
-        const errorElements = document.querySelectorAll('.error');
-        errorElements.forEach((el) => {
-            el.remove();
-        });
 
         props.data({
             principal_amt: data.principal_amt,
@@ -144,7 +129,7 @@ const InvestmentForm = (props) => {
         <>
             <form onSubmit={handleSubmit}>
                 <div className="row">
-                    <div className="md:col-span-2 text-red-400 text-sm">{error}</div>
+                    <div className="md:col-span-2 text-red-400 text-sm"></div>
                     {
                         Object.keys(InvestmentFormFields).map((key) => {
                             const field = InvestmentFormFields[key];
@@ -162,6 +147,7 @@ const InvestmentForm = (props) => {
                                         }
                                     </label>
                                     <input type={field.type} id={field.id} name={field.name} className={field.className} />
+                                    <span className="text-red-400 text-sm">{error[key]}</span>
                                 </div>
                             )
                         })

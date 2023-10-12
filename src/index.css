@@ -9,7 +9,7 @@
   }
 
   .row {
-    @apply grid grid-cols-1 gap-4;
+    @apply flex flex-col md:flex-row justify-between items-start flex-wrap;
   }
 
   .input-style {
@@ -31,5 +31,17 @@
   }
   .error {
     @apply text-red-500 text-[12px] leading-tight font-normal;
+  }
+
+  .form-control {
+    @apply w-full md:w-1/2 mb-4;
+  }
+
+  .row > .form-control:nth-child(odd) {
+    @apply md:pl-2;
+  }
+
+  .row > .form-control:nth-child(even) {
+    @apply md:pr-2;
   }
 }
